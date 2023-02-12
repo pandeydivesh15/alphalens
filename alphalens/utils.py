@@ -900,10 +900,14 @@ def get_forward_returns_columns(columns, require_exact_day_multiple=False):
     Utility that detects and returns the columns that are forward returns
     """
 
+    pattern = re.compile(r"^(\d+([Dhms]|ms|us|ns]))+$", re.IGNORECASE)
+    valid_columns = [(pattern.match(col) is not None) for col in columns]
+
     # If exact day multiples are required in the forward return periods,
     # drop all other columns (e.g. drop 3D12h).
     if require_exact_day_multiple:
         pattern = re.compile(r"^(\d+([D]))+$", re.IGNORECASE)
+        columns = columns[valid_columns]
         valid_columns = [(pattern.match(col) is not None) for col in columns]
 
         if sum(valid_columns) < len(valid_columns):
@@ -911,9 +915,6 @@ def get_forward_returns_columns(columns, require_exact_day_multiple=False):
                 "Skipping return periods that aren't exact multiples"
                 + " of days."
             )
-    else:
-        pattern = re.compile(r"^(\d+([Dhms]|ms|us|ns]))+$", re.IGNORECASE)
-        valid_columns = [(pattern.match(col) is not None) for col in columns]
 
     return columns[valid_columns]
 

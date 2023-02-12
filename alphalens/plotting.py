@@ -135,7 +135,7 @@ def plot_returns_table(alpha_beta,
                        mean_ret_quantile,
                        mean_ret_spread_quantile):
     returns_table = pd.DataFrame()
-    returns_table = returns_table.append(alpha_beta)
+    returns_table = pd.concat([returns_table, alpha_beta])
     returns_table.loc["Mean Period Wise Return Top Quantile (bps)"] = \
         mean_ret_quantile.iloc[-1] * DECIMAL_TO_BPS
     returns_table.loc["Mean Period Wise Return Bottom Quantile (bps)"] = \
@@ -150,11 +150,11 @@ def plot_returns_table(alpha_beta,
 def plot_turnover_table(autocorrelation_data, quantile_turnover):
     turnover_table = pd.DataFrame()
     for period in sorted(quantile_turnover.keys()):
-        for quantile, p_data in quantile_turnover[period].iteritems():
+        for quantile, p_data in quantile_turnover[period].items():
             turnover_table.loc["Quantile {} Mean Turnover ".format(quantile),
                                "{}D".format(period)] = p_data.mean()
     auto_corr = pd.DataFrame()
-    for period, p_data in autocorrelation_data.iteritems():
+    for period, p_data in autocorrelation_data.items():
         auto_corr.loc["Mean Factor Rank Autocorrelation",
                       "{}D".format(period)] = p_data.mean()
 
@@ -214,7 +214,7 @@ def plot_ic_ts(ic, ax=None):
         ax = np.asarray([ax]).flatten()
 
     ymin, ymax = (None, None)
-    for a, (period_num, ic) in zip(ax, ic.iteritems()):
+    for a, (period_num, ic) in zip(ax, ic.items()):
         ic.plot(alpha=0.7, ax=a, lw=0.7, color='steelblue')
         ic.rolling(window=22).mean().plot(
             ax=a,
@@ -272,8 +272,16 @@ def plot_ic_hist(ic, ax=None):
         f, ax = plt.subplots(v_spaces, 3, figsize=(18, v_spaces * 6))
         ax = ax.flatten()
 
-    for a, (period_num, ic) in zip(ax, ic.iteritems()):
-        sns.distplot(ic.replace(np.nan, 0.), norm_hist=True, ax=a)
+    for a, (period_num, ic) in zip(ax, ic.items()):
+        sns.histplot(
+            ic.replace(np.nan, 0.),
+            ax=a,
+            kde=True,
+            stat="density",
+            kde_kws=dict(cut=3),
+            alpha=0.4,
+            edgecolor=(1, 1, 1, 0.4)
+        )
         a.set(title="%s Period IC" % period_num, xlabel='IC')
         a.set_xlim([-1, 1])
         a.text(.05, .95, "Mean %.3f \n Std. %.3f" % (ic.mean(), ic.std()),
@@ -327,7 +335,7 @@ def plot_ic_qq(ic, theoretical_dist=stats.norm, ax=None):
     else:
         dist_name = 'Theoretical'
 
-    for a, (period_num, ic) in zip(ax, ic.iteritems()):
+    for a, (period_num, ic) in zip(ax, ic.items()):
         sm.qqplot(ic.replace(np.nan, 0.).values, theoretical_dist, fit=True,
                   line='45', ax=a)
         a.set(title="{} Period IC {} Dist. Q-Q".format(
@@ -500,7 +508,7 @@ def plot_mean_quantile_returns_spread_time_series(mean_returns_spread,
 
         ymin, ymax = (None, None)
         for (i, a), (name, fr_column) in zip(enumerate(ax),
-                                             mean_returns_spread.iteritems()):
+                                             mean_returns_spread.items()):
             stdn = None if std_err is None else std_err[name]
             a = plot_mean_quantile_returns_spread_time_series(fr_column,
                                                               std_err=stdn,
@@ -807,7 +815,7 @@ def plot_cumulative_returns_by_quantile(quantile_returns,
            ylim=(ymin, ymax))
 
     ax.yaxis.set_major_formatter(ScalarFormatter())
-    ax.axhline(1.0, linestyle='-', color='black', lw=1)
+    # ax.axhline(1.0, linestyle='-', color='black', lw=1)
 
     return ax
 

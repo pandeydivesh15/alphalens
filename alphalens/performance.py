@@ -196,7 +196,7 @@ def factor_weights(factor_data,
     if group_adjust:
         grouper.append('group')
 
-    weights = factor_data.groupby(grouper)['factor'] \
+    weights = factor_data.groupby(grouper, group_keys=False)['factor'] \
         .apply(to_weights, demeaned, equal_weight)
 
     if group_adjust:
